@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cycle Care</title>
+<script>
+  // Apply the saved theme before first paint (dark by default).
+  try { document.documentElement.dataset.theme = localStorage.getItem("pcos.theme") || "dark"; } catch {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"></div>
+
+<header class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="#home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17" fill="currentColor" stroke="none" opacity=".35"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <span class="brand-name">Cycle Care</span>
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#home" data-tab="home">Home</a>
+      <a href="#tracker" data-tab="tracker">Tracker</a>
+      <a href="#assess" data-tab="assess">Screening</a>
+      <a href="#chat" data-tab="chat">Ask</a>
+      <a href="#image" data-tab="image">Ultrasound</a>
+      <a href="#arch" data-tab="arch">How it works</a>
+    </nav>
+    <div class="nav-tools">
+      <select id="provider" class="select-sm" aria-label="AI model provider">
+        <option value="openai">OpenAI</option>
+        <option value="gemini">Gemini</option>
+      </select>
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="tab-home" class="panel">
+    <div class="hero">
+      <p class="eyebrow-pill"><span class="live-dot"></span> Grounded in the International PCOS guideline</p>
+      <h1 id="greeting">Good morning</h1>
+      <p class="lead">Track your cycle, understand your symptoms and get answers you can <span class="highlight">actually trust</span>, every one cited from medical guidelines.</p>
+    </div>
+
+    <div class="home-grid">
+      <div class="card cycle-card" id="home-cycle"></div>
+      <div class="card tip-card" id="home-tip">
+        <div class="card-label">Tip of the day</div>
+        <div class="skeleton-line"></div><div class="skeleton-line short"></div>
+      </div>
+    </div>
+
+    <div class="stat-strip" id="home-stats"></div>
+
+    <h2 class="section-title">What would you like to do?</h2>
+    <div class="action-grid">
+      <a class="card action" href="#tracker">
+        <span class="action-icon">◐</span>
+        <b>Log your period</b>
+        <small>Calendar, predictions and symptom log</small>
+      </a>
+      <a class="card action" href="#assess">
+        <span class="action-icon">◎</span>
+        <b>Check PCOS likelihood</b>
+        <small>Guideline-based screening report</small>
+      </a>
+      <a class="card action" href="#chat">
+        <span class="action-icon">❝</span>
+        <b>Ask a question</b>
+        <small>Cited answers from 4 medical documents</small>
+      </a>
+      <a class="card action" href="#image">
+        <span class="action-icon">▣</span>
+        <b>Explain an ultrasound</b>
+        <small>Educational image description</small>
+      </a>
+    </div>
+  </section>
+
+  <!-- TRACKER -->
+  <section id="tab-tracker" class="panel">
+    <div class="page-head">
+      <h1>Period tracker</h1>
+      <p class="lead">Log your days and see <span class="highlight">patterns over time</span>. Your data stays in this browser.</p>
+    </div>
+
+    <div class="tracker-grid">
+      <div class="card calendar-card">
+        <div class="cal-head">
+          <button class="icon-btn" id="cal-prev" aria-label="Previous month">‹</button>
+          <h3 id="cal-title">Month</h3>
+          <button class="icon-btn" id="cal-next" aria-label="Next month">›</button>
+        </div>
+        <div class="cal-grid cal-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+        <div class="cal-grid" id="cal-days"></div>
+        <div class="cal-legend">
+          <span><i class="lg period"></i>Period</span>
+          <span><i class="lg predicted"></i>Predicted period</span>
+          <span><i class="lg fertile"></i>Fertile window (estimate)</span>
+          <span><i class="lg ovulation"></i>Ovulation (estimate)</span>
+          <span><i class="lg logged"></i>Symptoms logged</span>
+        </div>
+        <div class="cal-actions">
+          <button class="btn btn-solid" id="log-today">Log today</button>
+          <button class="btn btn-outline" id="sample-data">Load sample data</button>
+          <button class="btn btn-ghost" id="export-csv">Export CSV</button>
+          <button class="btn btn-ghost danger-text" id="clear-data">Clear all</button>
+        </div>
+        <form class="past-period" id="past-period">
+          <div class="card-label">Add a past period</div>
+          <p class="hint">Enter when your last period started and ended. Add a few past periods for better predictions.</p>
+          <div class="past-row">
+            <label class="field"><span class="field-label">Start date</span><input type="date" id="pp-start" required></label>
+            <label class="field"><span class="field-label">End date</span><input type="date" id="pp-end"></label>
+            <button class="btn btn-card" type="submit">Add period</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="tracker-side">
+        <div class="card" id="day-editor">
+          <div class="card-label" id="day-title">Today</div>
+          <label class="switch-row"><span>Period day</span><input type="checkbox" id="day-period" class="switch"></label>
+          <div class="field" id="flow-field">
+            <span class="field-label">Flow</span>
+            <div class="segmented" id="day-flow">
+              <button data-v="light">Light</button><button data-v="medium">Medium</button><button data-v="heavy">Heavy</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Symptoms</span>
+            <div class="chips" id="day-symptoms"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Mood</span>
+            <div class="segmented" id="day-mood">
+              <button data-v="great">Great</button><button data-v="okay">Okay</button><button data-v="low">Low</button><button data-v="anxious">Anxious</button>
+            </div>
+          </div>
+          <label class="field"><span class="field-label">Notes</span><textarea id="day-notes" rows="2" placeholder="Anything worth remembering"></textarea></label>
+          <button class="btn btn-card full" id="day-save">Save day</button>
+        </div>
+
+        <div class="card" id="cycle-insights"></div>
+      </div>
+    </div>
+
+    <div class="tracker-bottom">
+      <div class="card" id="cycle-chart-card">
+        <div class="card-label">Recent cycle lengths</div>
+        <div id="cycle-chart"></div>
+      </div>
+      <div class="card" id="movement-card"></div>
+    </div>
+  </section>
+
+  <!-- RISK SCREENING -->
+  <section id="tab-assess" class="panel">
+    <div class="page-head">
+      <h1>PCOS screening</h1>
+      <p class="lead">Answer a few questions. The assistant checks them against the <span class="highlight">Rotterdam criteria</span> and the latest guideline.</p>
+    </div>
+    <div class="grid-2">
+      <form id="assess-form" class="card form-card">
+        <div class="form-section">
+          <h3>Basics</h3>
+          <div class="row">
+            <label class="field"><span class="field-label">Age</span><input type="number" name="age" min="10" max="60" value="24" required></label>
+            <label class="field"><span class="field-label">Waist (cm, optional)</span><input type="number" name="waist" min="40" max="200" placeholder="e.g. 82"></label>
+          </div>
+          <div class="row">
+            <label class="field"><span class="field-label">Height (cm)</span><input type="number" name="height" min="120" max="210" value="160" required></label>
+            <label class="field"><span class="field-label">Weight (kg)</span><input type="number" name="weight" min="30" max="200" value="75" required></label>
+          </div>
+          <div class="bmi">BMI <strong id="bmi-value">–</strong> <span id="bmi-cat"></span></div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-row"><h3>Cycle</h3><button type="button" class="btn btn-ghost sm" id="use-tracker">Use my tracker data</button></div>
+          <div class="row">
+            <label class="field"><span class="field-label">Typical cycle length (days)</span><input type="number" name="cycleLength" min="10" max="120" value="45" required></label>
+            <label class="field"><span class="field-label">Regularity</span>
+              <select name="cycleRegularity"><option>Irregular</option><option>Regular</option></select>
+            </label>
+          </div>
+          <p class="hint" id="tracker-hint" hidden></p>
+        </div>
+
+        <div class="form-section">
+          <h3>Symptoms</h3>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" name="weightGain" checked><span>Recent weight gain</span></label>
+            <label class="chip"><input type="checkbox" name="hirsutism" checked><span>Excess hair growth</span></label>
+            <label class="chip"><input type="checkbox" name="acne" checked><span>Acne</span></label>
+            <label class="chip"><input type="checkbox" name="hairLoss"><span>Hair thinning</span></label>
+            <label class="chip"><input type="checkbox" name="skinDarkening"><span>Skin darkening</span></label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Lifestyle and background</h3>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" name="fastFood" checked><span>Frequent fast food</span></label>
+            <label class="chip"><input type="checkbox" name="exercise"><span>Exercise regularly</span></label>
+            <label class="chip"><input type="checkbox" name="sleepIssues"><span>Snoring or daytime sleepiness</span></label>
+            <label class="chip"><input type="checkbox" name="familyHistory"><span>Family history of PCOS or diabetes</span></label>
+            <label class="chip"><input type="checkbox" name="lowMood"><span>Low mood or anxiety</span></label>
+            <label class="chip"><input type="checkbox" name="tryingToConceive"><span>Trying to conceive</span></label>
+          </div>
+        </div>
+
+        <label class="field"><span class="field-label">Anything else (optional)</span><textarea name="notes" rows="2" placeholder="e.g. periods stopped for 3 months"></textarea></label>
+        <button type="submit" class="btn btn-solid full" id="assess-btn">Analyse my answers <span aria-hidden="true">↗</span></button>
+      </form>
+
+      <div id="assess-result" class="card result empty">
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <p>Your report will appear here with the <span class="highlight">sources it used</span>, so you can check every claim.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+  <section id="tab-chat" class="panel">
+    <div class="chat-layout">
+      <aside class="card side-list">
+        <button class="btn btn-solid full" id="new-chat">New chat</button>
+        <div class="list-title">Saved chats</div>
+        <ul id="chat-list"></ul>
+      </aside>
+      <div class="card chat">
+        <div class="chat-head">
+          <h2 id="chat-title">Ask the guidelines</h2>
+          <div class="chat-actions">
+            <label class="switch-row sm"><span>Personalise</span><input type="checkbox" id="use-profile" class="switch"></label>
+            <button class="btn btn-ghost sm" id="export-chat" title="Download this chat as Markdown">Export</button>
+          </div>
+        </div>
+        <div id="messages" class="messages"></div>
+        <div class="suggestions" id="suggestions">
+          <button>How is PCOS diagnosed?</button>
+          <button>Why was PCOS renamed to PMOS?</button>
+          <button>What diet is best for PCOS?</button>
+          <button>How much exercise should I do?</button>
+          <button>Does PCOS affect mental health?</button>
+        </div>
+        <form id="chat-form" class="chat-input">
+          <input id="chat-text" placeholder="Ask anything about PCOS" autocomplete="off" required>
+          <button class="btn btn-solid" id="send-btn">Send</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ULTRASOUND -->
+  <section id="tab-image" class="panel">
+    <div class="chat-layout">
+      <aside class="card side-list">
+        <button class="btn btn-solid full" id="new-scan">New analysis</button>
+        <div class="list-title">Saved scans</div>
+        <ul id="scan-list" class="scan-list"></ul>
+      </aside>
+      <div class="scan-main">
+        <div class="grid-2 even">
+          <div class="card">
+            <h2>Ultrasound image <span class="chip-static">Experimental</span></h2>
+            <p class="muted small">A vision model describes visible features. A colour pre-check rejects photos, and the model is told to refuse non-ultrasound images. Not a diagnostic tool.</p>
+            <label class="drop" id="drop">
+              <input type="file" id="image-input" accept="image/*" hidden>
+              <img id="preview" alt="" hidden>
+              <span id="drop-text"><b>Click to upload</b> or drag an image here</span>
+            </label>
+            <button class="btn btn-card full" id="image-btn" disabled>Analyse image</button>
+          </div>
+          <div id="image-result" class="card result empty"><div class="empty-state"><div class="empty-icon">▣</div><p>Results will appear here.</p></div></div>
+        </div>
+        <div class="card chat scan-chat" id="scan-chat" hidden>
+          <div class="chat-head"><h2>Ask about this scan</h2></div>
+          <div id="scan-messages" class="messages"></div>
+          <div class="suggestions" id="scan-suggestions">
+            <button>What do these features mean for PCOS?</button>
+            <button>What is the follicle count threshold for PCOM?</button>
+            <button>What tests should I discuss with a doctor next?</button>
+          </div>
+          <form id="scan-chat-form" class="chat-input">
+            <input id="scan-chat-text" placeholder="Ask a question about this image" autocomplete="off" required>
+            <button class="btn btn-solid" id="scan-send-btn">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="tab-arch" class="panel">
+    <div class="page-head">
+      <h1>How it works</h1>
+      <p class="lead">Retrieval-augmented generation: the AI only answers from <span class="highlight">passages it retrieved</span>, and shows you which ones.</p>
+    </div>
+    <div class="card">
+      <div class="pipeline">
+        <div class="stage"><span class="n">1</span><b>Knowledge base</b><small id="st-docs">PDF documents</small><em id="st-pages">– pages</em></div>
+        <div class="arrow">→</div>
+        <div class="stage"><span class="n">2</span><b>Chunking</b><small>Overlapping text chunks</small><em id="st-chunks">– chunks</em></div>
+        <div class="arrow">→</div>
+        <div class="stage"><span class="n">3</span><b>Embeddings</b><small id="st-embed">–</small><em id="st-dims">– dims</em></div>
+        <div class="arrow">→</div>
+        <div class="stage"><span class="n">4</span><b>Vector search</b><small>Cosine similarity, top-k</small><em>k = 3 to 6</em></div>
+        <div class="arrow">→</div>
+        <div class="stage"><span class="n">5</span><b>Grounded generation</b><small id="st-llm">–</small><em>Cited JSON or text</em></div>
+      </div>
+      <h3>Indexed documents</h3>
+      <ul class="plain-list" id="doc-list"></ul>
+      <div class="grid-3">
+        <div class="mini"><h3>Retrieval-augmented generation</h3><p>Each request is embedded and matched against the index. Only retrieved passages go to the LLM, which must cite them as [S1], [S2]. Passages and similarity scores are shown under every answer.</p></div>
+        <div class="mini"><h3>Prompt engineering</h3><p>System prompts encode the Rotterdam criteria, safety rules (never diagnose) and strict JSON output schemas for the screening report, tips and wellness plans.</p></div>
+        <div class="mini"><h3>Reliability</h3><p>Two LLM providers with retry and automatic fallback, a rule-based image pre-check, a stronger vision model, and a WhatsApp channel through Twilio.</p></div>
+      </div>
+      <h3>Limitations and future work</h3>
+      <ul class="plain-list">
+        <li>Screening levels come from an LLM following guideline rules. They are not calibrated probabilities.</li>
+        <li>Cycle predictions and fertile windows are calendar estimates and are unreliable with irregular cycles. Never use them for contraception.</li>
+        <li>Future work: add trained ML models (a symptom classifier and a validated ultrasound model) alongside the LLM, trained on clean, representative clinical data.</li>
+        <li>User accounts and cloud sync are planned. Today all personal data stays in the browser.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>Educational project. Not a medical device and not a diagnosis. Always consult a qualified clinician.</p>
+</footer>
+
+<nav class="bottom-nav" aria-label="Mobile">
+  <a href="#home" data-tab="home"><span>⌂</span>Home</a>
+  <a href="#tracker" data-tab="tracker"><span>◐</span>Tracker</a>
+  <a href="#assess" data-tab="assess"><span>◎</span>Screen</a>
+  <a href="#chat" data-tab="chat"><span>❝</span>Ask</a>
+  <a href="#image" data-tab="image"><span>▣</span>Scan</a>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>

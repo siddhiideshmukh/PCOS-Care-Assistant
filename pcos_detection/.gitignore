@@ -1,0 +1,12 @@
+# Secrets
+.env
+
+# Dependencies
+node_modules/
+
+# Generated vector index (rebuilt automatically from data/*.pdf)
+web/data/vector_index.json
+
+# System files
+.DS_Store
+*.log
